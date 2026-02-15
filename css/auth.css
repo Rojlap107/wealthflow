@@ -1,0 +1,119 @@
+/* ============================================
+   Authentication & Admin Styles
+   ============================================ */
+.auth-container {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    /* align-items: center; */
+    /* justify-content: center; */
+    background: var(--bg-primary);
+    z-index: 5000;
+    padding: var(--space-4);
+    overflow-y: auto;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 360px;
+    margin: auto;
+    /* Safe centering */
+    background: var(--bg-secondary);
+    border-radius: var(--radius-xl);
+    padding: var(--space-8) var(--space-6);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-lg);
+    text-align: center;
+}
+
+#authTitle {
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-bold);
+    margin-bottom: var(--space-8);
+}
+
+.auth-toggle {
+    margin-top: var(--space-6);
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+}
+
+.auth-toggle a {
+    color: var(--accent-blue);
+    text-decoration: none;
+    font-weight: var(--font-semibold);
+}
+
+.btn-block {
+    width: 100%;
+}
+
+.logout-btn {
+    color: var(--accent-red);
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-2);
+}
+
+/* Admin Styles */
+.admin-controls {
+    margin-top: var(--space-4);
+    overflow-x: auto;
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.admin-table th,
+.admin-table td {
+    padding: var(--space-3);
+    text-align: left;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.admin-table th {
+    color: var(--text-tertiary);
+    font-size: var(--font-size-xs);
+    text-transform: uppercase;
+}
+
+.admin-table td {
+    font-size: var(--font-size-sm);
+}
+
+.admin-actions {
+    display: flex;
+    gap: var(--space-2);
+}
+
+.action-btn {
+    background: var(--bg-tertiary);
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 4px 8px;
+    color: var(--text-primary);
+    font-size: var(--font-size-xs);
+    cursor: pointer;
+}
+
+.action-btn:hover {
+    background: var(--bg-elevated);
+}
+
+.action-btn.danger {
+    color: var(--accent-red);
+}
+
+.action-btn.primary {
+    color: var(--accent-blue);
+}
+
+.hidden {
+    display: none !important;
+}

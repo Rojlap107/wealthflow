@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#000000" id="themeColorMeta">
+  <title>WealthFlow - Expense Tracker</title>
+  <link rel="icon" type="image/svg+xml"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%230a84ff' d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.31-7.86c-1.77-.45-2.34-.94-2.34-1.67 0-.84.79-1.43 2.1-1.43 1.38 0 1.9.66 1.94 1.64h1.71c-.05-1.34-.87-2.57-2.49-2.97V5H10.9v1.69c-1.51.32-2.72 1.3-2.72 2.81 0 1.79 1.49 2.69 3.66 3.21 1.95.46 2.34 1.15 2.34 1.87 0 .53-.39 1.39-2.1 1.39-1.6 0-2.23-.72-2.32-1.64H8.04c.1 1.7 1.36 2.66 2.86 2.97V19h2.34v-1.67c1.52-.29 2.72-1.16 2.73-2.77-.01-2.2-1.9-2.96-3.66-3.42z'/%3E%3C/svg%3E">
+  <meta name="description" content="WealthFlow - Personal wealth tracker with AI financial advisor">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="assets/logo.png">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/auth.css">
+
+  <!-- Additional Inline Styles for Trend Chart & Chat -->
+  <style>
+    /* Trend Chart Styles */
+    .trend-chart {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+    }
+
+    .trend-bars {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      height: 120px;
+      gap: var(--space-2);
+    }
+
+    .trend-month {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .trend-bar-group {
+      display: flex;
+      gap: 4px;
+      align-items: flex-end;
+      height: 100px;
+    }
+
+    .trend-bar {
+      width: 12px;
+      border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+      transition: height var(--transition-slow);
+    }
+
+    .trend-bar.income {
+      background: linear-gradient(to top, var(--accent-green), rgba(48, 209, 88, 0.6));
+    }
+
+    .trend-bar.expense {
+      background: linear-gradient(to top, var(--accent-red), rgba(255, 69, 58, 0.6));
+    }
+
+    .trend-label {
+      font-size: var(--font-size-xs);
+      color: var(--text-tertiary);
+    }
+
+    .trend-legend {
+      display: flex;
+      justify-content: center;
+      gap: var(--space-6);
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-size: var(--font-size-xs);
+      color: var(--text-secondary);
+    }
+
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .legend-dot.income {
+      background: var(--accent-green);
+    }
+
+    .legend-dot.expense {
+      background: var(--accent-red);
+    }
+
+    /* Entries Page Styles */
+    .entries-date-group {
+      margin-bottom: var(--space-5);
+    }
+
+    .entries-date-header {
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-semibold);
+      color: var(--text-secondary);
+      margin-bottom: var(--space-3);
+      padding-left: var(--space-2);
+    }
+
+    .entries-items {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+    }
+
+    .entry-amount-container {
+      text-align: right;
+    }
+
+    /* Typing indicator */
+    .typing-dots {
+      display: flex;
+      gap: 4px;
+      padding: 4px 0;
+    }
+
+    .typing-dots span {
+      width: 8px;
+      height: 8px;
+      background: var(--text-tertiary);
+      border-radius: 50%;
+      animation: typing 1.4s infinite;
+    }
+
+    .typing-dots span:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .typing-dots span:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    @keyframes typing {
+
+      0%,
+      60%,
+      100% {
+        transform: translateY(0);
+        opacity: 0.4;
+      }
+
+      30% {
+        transform: translateY(-8px);
+        opacity: 1;
+      }
+    }
+
+    /* Negative savings indicator */
+    .summary-card.savings.negative .summary-value {
+      color: var(--accent-red);
+    }
+
+    /* Logo Styles */
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .logo-text {
+      font-size: var(--font-size-3xl);
+      font-weight: var(--font-bold);
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .logo-text span {
+      font-weight: var(--font-regular);
+      opacity: 0.6;
+    }
+
+    .welcome-text {
+      font-size: var(--font-size-md);
+      font-weight: var(--font-medium);
+      color: var(--text-secondary);
+      margin-top: -4px;
+      animation: fadeIn 0.8s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-5px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Theme Toggle */
+    .theme-toggle {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-2) var(--space-3);
+      background: var(--bg-tertiary);
+      border: none;
+      border-radius: var(--radius-full);
+      cursor: pointer;
+      transition: background var(--transition-fast);
+    }
+
+    .theme-toggle:hover {
+      background: var(--bg-elevated);
+    }
+
+    .theme-toggle svg {
+      width: 20px;
+      height: 20px;
+      fill: var(--text-primary);
+      transition: transform var(--transition-fast);
+    }
+
+    .theme-toggle:active svg {
+      transform: rotate(15deg);
+    }
+
+    .theme-icon-sun,
+    .theme-icon-moon {
+      display: none;
+    }
+
+    [data-theme="dark"] .theme-icon-sun {
+      display: block;
+    }
+
+    [data-theme="light"] .theme-icon-moon {
+      display: block;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Auth Screen -->
+  <div id="authContainer" class="auth-container">
+    <div class="auth-card">
+      <h2 id="authTitle">Login to WealthFlow</h2>
+      <form id="authForm">
+        <div class="form-group">
+          <label class="form-label" for="authUsername">Username</label>
+          <input type="text" class="form-input" id="authUsername" required placeholder="Enter username">
+        </div>
+        <div class="form-group">
+          <input type="password" class="form-input" id="authPassword" required placeholder="Enter password">
+        </div>
+
+        <!-- Registration Only Fields -->
+        <div id="registerFields" class="hidden">
+          <div class="form-group">
+            <label class="form-label" for="regName">Full Name</label>
+            <input type="text" class="form-input" id="regName" placeholder="e.g. Tenzin Paljor">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="regDob">Date of Birth</label>
+            <input type="date" class="form-input" id="regDob">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Profile Avatar</label>
+            <div class="avatar-selection-grid micro-grid" id="regAvatarGrid">
+              <!-- Dynamically populated icons -->
+            </div>
+            <input type="hidden" id="regAvatarValue" value="initials">
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block" id="authSubmitBtn">Login</button>
+      </form>
+      <p class="auth-toggle">
+        <span id="authToggleText">Don't have an account?</span>
+        <a href="#" id="authToggleLink">Register</a>
+      </p>
+    </div>
+  </div>
+
+  <div class="app" id="mainApp" style="display: none;">
+    <!-- Dashboard Page -->
+    <div id="page-dashboard" class="page active">
+      <header class="header">
+        <div class="header-container">
+          <div class="user-welcome">
+            <div class="welcome-label">Welcome back</div>
+            <h1 class="user-name" id="headerUserName">User</h1>
+          </div>
+          <div class="header-avatar" id="headerAvatarContainer">
+            <img src="assets/logo.png" alt="Profile" id="headerAvatar"
+              style="width: 56px; height: 56px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent-blue);">
+          </div>
+        </div>
+      </header>
+      <main class="main-content">
+        <!-- Month Selector -->
+        <div class="month-selector">
+          <button class="month-btn" id="prevMonth" aria-label="Previous month">
+            <svg viewBox="0 0 24 24">
+              <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
+            </svg>
+          </button>
+          <span class="month-display" id="monthDisplay">February 2026</span>
+          <button class="month-btn" id="nextMonth" aria-label="Next month">
+            <svg viewBox="0 0 24 24">
+              <path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="summary-cards">
+          <div class="summary-card income">
+            <div class="summary-label">Income</div>
+            <div class="summary-value" id="totalIncome">₹0</div>
+            <div class="card-glow"></div>
+          </div>
+          <div class="summary-card expense">
+            <div class="summary-label">Expense</div>
+            <div class="summary-value" id="totalExpense">₹0</div>
+            <div class="card-glow"></div>
+          </div>
+          <div class="summary-card investment">
+            <div class="summary-label">Investment</div>
+            <div class="summary-value" id="totalInvestment">₹0</div>
+            <div class="card-glow"></div>
+          </div>
+        </div>
+
+        <!-- Section headers for trend/breakdown -->
+        <div class="section-header">
+          <h3 class="section-title" id="categoryChartTitle">Expense by Category</h3>
+        </div>
+        <div class="chart-container glass-card">
+          <div class="category-bars" id="categoryChart">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <div class="section-header">
+          <h3 class="section-title">Monthly Trend</h3>
+        </div>
+        <div class="chart-container glass-card" id="trendChartContainer">
+          <div id="trendChart">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Entries Page -->
+    <div id="page-entries" class="page">
+      <header class="header">
+        <p class="header-subtitle" id="entriesMonthDisplay"></p>
+      </header>
+
+      <main class="main-content">
+        <!-- Month Selector (sync with dashboard) -->
+        <div class="month-selector">
+          <button class="month-btn" id="entriesPrevMonth" aria-label="Previous month">
+            <svg viewBox="0 0 24 24">
+              <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
+            </svg>
+          </button>
+          <span class="month-display" id="entriesMonth">February 2026</span>
+          <button class="month-btn" id="entriesNextMonth" aria-label="Next month">
+            <svg viewBox="0 0 24 24">
+              <path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z" />
+            </svg>
+          </button>
+        </div>
+
+        <div id="entriesList">
+          <!-- Dynamically populated -->
+        </div>
+      </main>
+    </div>
+
+    <!-- Chat Page -->
+    <div id="page-chat" class="page">
+      <header class="header chat-header">
+        <div class="wealth-ai-logo">
+          <div class="wealth-ai-text">
+            <h1 class="wealth-ai-title">
+              <span class="wealth">wealth</span><span class="flow">flow</span>
+              <span class="ai">AI</span>
+            </h1>
+          </div>
+        </div>
+      </header>
+
+
+
+      <div class="chat-container">
+        <div class="chat-messages" id="chatMessages">
+          <!-- Dynamically populated -->
+        </div>
+
+        <div class="chat-input-container">
+          <div class="chat-input-wrapper">
+            <input type="text" class="chat-input" id="chatInput" placeholder="Ask about your finances..."
+              autocomplete="off">
+            <button class="chat-send-btn" id="chatSendBtn" aria-label="Send message">
+              <svg viewBox="0 0 24 24">
+                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+              </svg>
+            </button>
+          </div>
+          <p class="chat-disclaimer">WealthFlow AI can make mistakes. Check important info.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Profile Page -->
+    <div id="page-profile" class="page">
+      <main class="main-content">
+        <!-- Profile Card -->
+        <div class="card profile-card">
+          <div class="profile-avatar-wrapper" id="changeAvatarBtn">
+            <div class="profile-avatar" id="profileAvatar">
+              <span></span>
+            </div>
+          </div>
+          <div class="profile-info">
+            <h3 class="profile-name" id="profileDisplayName">Set up your profile</h3>
+            <p class="profile-meta" id="profileDisplayMeta">Tap to add your details</p>
+          </div>
+          <button class="btn-icon" id="editProfileBtn" aria-label="Edit profile">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+              <path
+                d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Savings Goal Section -->
+        <div class="section-header">
+          <h3 class="section-title">Savings Goal</h3>
+          <button class="section-action" id="addGoalBtn">+ Add Goal</button>
+        </div>
+
+        <div id="goalContainer">
+          <!-- Dynamically populated -->
+        </div>
+
+        <!-- Goal Feasibility Card (shown when goal exists) -->
+        <div class="card goal-analysis-card hidden" id="goalAnalysisCard">
+          <h4 class="card-title">Goal Feasibility</h4>
+          <div class="feasibility-meter">
+            <div class="feasibility-bar" id="feasibilityBar"></div>
+          </div>
+          <p class="feasibility-text" id="feasibilityText"></p>
+        </div>
+
+        <!-- Settings Section -->
+        <div class="section-header">
+          <h3 class="section-title">Settings</h3>
+        </div>
+
+        <div class="settings-group">
+          <button class="settings-item" id="profileThemeToggle">
+            <span class="settings-icon">
+              <svg class="theme-icon-sun" viewBox="0 0 24 24" width="20" height="20">
+                <path
+                  d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z" />
+              </svg>
+              <svg class="theme-icon-moon" viewBox="0 0 24 24" width="20" height="20" style="display: none;">
+                <path
+                  d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-3.03 0-5.5-2.47-5.5-5.5 0-1.82.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z" />
+              </svg>
+            </span>
+            <span class="settings-label">Appearance</span>
+          </button>
+          <button class="settings-item" id="profileLogoutBtn">
+            <span class="settings-icon">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                <path
+                  d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z" />
+              </svg>
+            </span>
+            <span class="settings-label">Log Out</span>
+          </button>
+        </div>
+
+        <div class="settings-group">
+          <button class="settings-item" id="manageCategoriesBtn">
+            <span class="settings-icon">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+              </svg>
+            </span>
+            <span class="settings-label">Manage Categories</span>
+          </button>
+          <button class="settings-item" id="exportDataBtn">
+            <span class="settings-icon">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+              </svg>
+            </span>
+            <span class="settings-label">Export Data</span>
+          </button>
+          <button class="settings-item danger" id="clearDataBtn">
+            <span class="settings-icon">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
+              </svg>
+            </span>
+            <span class="settings-label">Clear All Data</span>
+          </button>
+        </div>
+
+      </main>
+    </div>
+
+    <!-- Categories Page -->
+    <div id="page-categories" class="page">
+      <header class="header">
+        <div class="header-container">
+          <button class="btn-icon" id="backToProfileBtn">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+              <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
+            </svg>
+          </button>
+          <h2 class="header-title">Categories</h2>
+          <button class="btn btn-primary btn-sm" id="addCategoryBtnHeader">+ Add</button>
+        </div>
+      </header>
+
+      <main class="main-content">
+        <div class="card">
+          <h4 class="card-title">Expense Categories</h4>
+          <div id="expenseCategoriesList" class="category-list">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <div class="card">
+          <h4 class="card-title">Income Categories</h4>
+          <div id="incomeCategoriesList" class="category-list">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <div class="card">
+          <h4 class="card-title">Investment Categories</h4>
+          <div id="investmentCategoriesList" class="category-list">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- App Info -->
+    <div class="app-info">
+      <p class="app-version">WealthFlow v1.0</p>
+      <p class="app-note">Secure multi-user wealth management</p>
+    </div>
+    </main>
+  </div>
+
+
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" data-page="dashboard">
+      <span class="nav-icon">
+        <svg viewBox="0 0 24 24">
+          <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" />
+        </svg>
+      </span>
+      <span>Wealth</span>
+    </button>
+    <button class="nav-item" data-page="entries">
+      <span class="nav-icon">
+        <svg viewBox="0 0 24 24">
+          <path
+            d="M4 10.5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5zm0-6c-.83 0-1.5.67-1.5 1.5S3.17 7.5 4 7.5 5.5 6.83 5.5 6 4.83 4.5 4 4.5zm0 12c-.83 0-1.5.68-1.5 1.5s.68 1.5 1.5 1.5 1.5-.68 1.5-1.5-.67-1.5-1.5-1.5zM7 19h14v-2H7v2zm0-6h14v-2H7v2zm0-8v2h14V5H7z" />
+        </svg>
+      </span>
+      <span>Entries</span>
+    </button>
+    <button class="nav-item add-btn" data-page="add">
+      <span class="nav-icon">
+        <svg viewBox="0 0 24 24">
+          <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+        </svg>
+      </span>
+    </button>
+    <button class="nav-item" data-page="chat">
+      <span class="nav-icon">
+        <svg viewBox="0 0 24 24">
+          <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z" />
+        </svg>
+      </span>
+      <span>WealthFlow AI</span>
+    </button>
+    <button class="nav-item" data-page="profile">
+      <span class="nav-icon">
+        <svg viewBox="0 0 24 24">
+          <path
+            d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+        </svg>
+      </span>
+      <span>Profile</span>
+    </button>
+
+  </nav>
+
+  <!-- Add/Edit Entry Modal -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modalTitle">Add Entry</h2>
+        <button class="modal-close" id="modalClose" aria-label="Close">
+          <svg viewBox="0 0 24 24">
+            <path
+              d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+          </svg>
+        </button>
+      </div>
+
+      <form id="entryForm">
+        <!-- Entry Type Toggle -->
+        <div class="form-group">
+          <label class="form-label">Type</label>
+          <div class="toggle-group">
+            <button type="button" class="toggle-btn expense active" data-type="expense">Expense</button>
+            <button type="button" class="toggle-btn income" data-type="income">Income</button>
+            <button type="button" class="toggle-btn investment" data-type="investment">Investment</button>
+          </div>
+        </div>
+
+        <!-- Fixed / Variable Toggle -->
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <div class="toggle-group">
+            <button type="button" class="toggle-btn active" data-entry-category="variable">Variable</button>
+            <button type="button" class="toggle-btn" data-entry-category="fixed">Fixed (Recurring)</button>
+          </div>
+        </div>
+
+        <!-- Date -->
+        <div class="form-group">
+          <label class="form-label" for="entryDate">Date</label>
+          <input type="date" class="form-input" id="entryDate" required>
+        </div>
+
+        <!-- Cost Head -->
+        <div class="form-group">
+          <label class="form-label" for="entryCostHead">Description</label>
+          <input type="text" class="form-input" id="entryCostHead" placeholder="What was this for?" required>
+        </div>
+
+        <!-- Amount & Currency -->
+        <div class="form-group">
+          <label class="form-label">Amount</label>
+          <div class="amount-input-group">
+            <input type="number" class="form-input" id="entryAmount" placeholder="0.00" step="0.01" min="0" required>
+            <select class="form-input form-select currency-select" id="entryCurrency">
+              <option value="INR">INR</option>
+              <option value="USD">USD</option>
+              <option value="EUR">EUR</option>
+              <option value="GBP">GBP</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Category -->
+        <div class="form-group">
+          <label class="form-label" for="entryCategory">Category</label>
+          <select class="form-input form-select" id="entryCategory" required>
+            <!-- Dynamically populated -->
+          </select>
+        </div>
+
+        <!-- Payment Method -->
+        <div class="form-group">
+          <label class="form-label" for="entryPaymentMethod">Payment Method</label>
+          <select class="form-input form-select" id="entryPaymentMethod">
+            <option value="cash">Cash</option>
+            <option value="upi">UPI</option>
+            <option value="credit_card">Credit Card</option>
+            <option value="debit_card">Debit Card</option>
+            <option value="bank_transfer">Bank Transfer</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+
+        <!-- Notes -->
+        <div class="form-group">
+          <label class="form-label" for="entryNotes">Notes (optional)</label>
+          <input type="text" class="form-input" id="entryNotes" placeholder="Additional details...">
+        </div>
+
+        <!-- Actions -->
+        <div class="form-group mb-4">
+          <button type="submit" class="btn btn-primary">Save Entry</button>
+        </div>
+
+        <button type="button" class="btn btn-secondary hidden" id="deleteEntryBtn" style="width: 100%;">Delete
+          Entry</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Profile Edit Modal -->
+  <div class="modal-overlay" id="profileModalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title">Edit Profile</h2>
+        <button class="modal-close" id="profileModalClose" aria-label="Close">
+          <svg viewBox="0 0 24 24">
+            <path
+              d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+          </svg>
+        </button>
+      </div>
+
+      <form id="profileForm">
+        <div class="form-group">
+          <label class="form-label">Profile Picture</label>
+          <div class="avatar-selection-grid">
+            <div class="avatar-option selected" data-avatar="initials">
+              <div class="avatar-preview initials-preview">Ab</div>
+            </div>
+            <!-- Pre-set fruit avatars will be injected here -->
+            <div id="presetAvatars" style="display: contents;"></div>
+
+            <label class="avatar-option upload-option" for="avatarUpload">
+              <div class="avatar-preview upload-preview">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                  <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                </svg>
+              </div>
+              <input type="file" id="avatarUpload" accept="image/*" hidden>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="profileName">Name</label>
+          <input type="text" class="form-input" id="profileName" placeholder="Your name" required>
+        </div>
+
+        <div class="form-group" id="profileAgeGroup">
+          <label class="form-label" for="profileDob">Date of Birth</label>
+          <input type="date" class="form-input" id="profileDob" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="profileEmail">Email (optional)</label>
+          <input type="email" class="form-input" id="profileEmail" placeholder="your@email.com">
+        </div>
+
+        <div class="form-group">
+          <button type="submit" class="btn btn-primary">Save Profile</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Goal Edit Modal -->
+  <div class="modal-overlay" id="goalModalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title" id="goalModalTitle">Add Savings Goal</h2>
+        <button class="modal-close" id="goalModalClose" aria-label="Close">
+          <svg viewBox="0 0 24 24">
+            <path
+              d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+          </svg>
+        </button>
+      </div>
+
+      <form id="goalForm">
+        <div class="form-group">
+          <label class="form-label" for="goalName">Goal Name</label>
+          <input type="text" class="form-input" id="goalName" placeholder="e.g., Retirement Fund, House Down Payment"
+            required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="goalAmount">Target Amount (₹)</label>
+          <input type="number" class="form-input" id="goalAmount" placeholder="e.g., 1000000" min="1000" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="goalAge">Target Age (by when)</label>
+          <input type="number" class="form-input" id="goalAge" placeholder="e.g., 35" min="18" max="100" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="goalType">Investment Type</label>
+          <select class="form-input form-select" id="goalType">
+            <option value="savings">Savings Account (3.5% ROI)</option>
+            <option value="fd">Fixed Deposit (6.5% ROI)</option>
+            <option value="mutual_funds">Mutual Funds (12% ROI)</option>
+            <option value="stocks">Stocks (14% ROI)</option>
+            <option value="mixed">Mixed Portfolio (9% ROI)</option>
+          </select>
+          <p class="form-help-text" style="margin-top: 8px; font-size: 0.75rem; color: var(--text-tertiary);">
+            ROI = Return on Investment (annual average based on Indian market data)
+          </p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="goalNotes">Notes (optional)</label>
+          <input type="text" class="form-input" id="goalNotes" placeholder="Any additional notes...">
+        </div>
+
+        <div class="form-group">
+          <button type="submit" class="btn btn-primary">Save Goal</button>
+        </div>
+
+        <button type="button" class="btn btn-secondary hidden" id="deleteGoalBtn" style="width: 100%;">Delete
+          Goal</button>
+      </form>
+    </div>
+  </div>
+  </div>
+
+  <!-- Category Edit Modal -->
+  <div class="modal-overlay" id="categoryModalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title" id="categoryModalTitle">Add Category</h2>
+        <button class="modal-close" id="categoryModalClose" aria-label="Close">
+          <svg viewBox="0 0 24 24">
+            <path
+              d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+          </svg>
+        </button>
+      </div>
+
+      <form id="categoryForm">
+        <div class="form-group">
+          <label class="form-label" for="categoryName">Category Name</label>
+          <input type="text" class="form-input" id="categoryName" placeholder="e.g., Groceries, Freelance" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="categoryIcon">Icon</label>
+          <select class="form-input form-select" id="categoryIcon" required>
+            <option value="category">Category (Default)</option>
+            <option value="home">Home</option>
+            <option value="restaurant">Restaurant</option>
+            <option value="directions_car">Car</option>
+            <option value="lightbulb">Lightbulb</option>
+            <option value="shopping_cart">Shopping Cart</option>
+            <option value="movie">Movie</option>
+            <option value="medical_services">Medical</option>
+            <option value="school">School</option>
+            <option value="credit_card">Credit Card</option>
+            <option value="card_giftcard">Gift</option>
+            <option value="flight">Flight</option>
+            <option value="payments">Payments</option>
+            <option value="computer">Computer</option>
+            <option value="trending_up">Trending Up</option>
+            <option value="redeem">Redeem</option>
+            <option value="account_balance_wallet">Wallet</option>
+            <option value="work">Work</option>
+            <option value="fitness_center">Fitness</option>
+            <option value="pets">Pets</option>
+            <option value="local_cafe">Cafe</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="categoryColor">Color</label>
+          <input type="color" class="form-input" id="categoryColor" value="#ff9f0a" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Type</label>
+          <div class="toggle-group">
+            <button type="button" class="toggle-btn active" data-category-type="expense">Expense</button>
+            <button type="button" class="toggle-btn" data-category-type="income">Income</button>
+            <button type="button" class="toggle-btn" data-category-type="investment">Investment</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <button type="submit" class="btn btn-primary">Save Category</button>
+        </div>
+
+        <button type="button" class="btn btn-secondary hidden" id="deleteCategoryBtn" style="width: 100%;">Delete
+          Category</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Custom Delete Confirmation Modal -->
+  <div class="modal-overlay" id="deleteConfirmOverlay" style="z-index: 2000;">
+    <div class="modal delete-modal" style="max-height: auto; height: auto;">
+      <div class="modal-header">
+        <h2 class="modal-title">Confirm Deletion</h2>
+        <button class="modal-close" id="deleteConfirmClose" aria-label="Close">
+          <svg viewBox="0 0 24 24">
+            <path
+              d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p id="deleteConfirmUiMessage">Are you sure you want to delete this item? This action cannot be undone.</p>
+      </div>
+      <div class="modal-footer" style="display: flex; gap: 12px; margin-top: 24px;">
+        <button type="button" class="btn btn-secondary" id="cancelDeleteBtn" style="flex: 1;">Cancel</button>
+        <button type="button" class="btn btn-primary" id="confirmDeleteBtn"
+          style="flex: 1; background: var(--accent-red);">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/auth.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/entries.js"></script>
+  <script src="js/currency.js"></script>
+  <script src="js/profile.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script src="js/chatbot.js"></script>
+  <script src="js/app.js"></script>
+</body>
+
+</html>

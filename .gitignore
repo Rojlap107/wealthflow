@@ -1,0 +1,21 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Environment
+.env
+
+# Database (recreated on deploy)
+*.db
+
+# macOS
+.DS_Store
+
+# Logs
+server_logs.txt
+
+# IDE
+.vscode/
+.idea/

@@ -283,13 +283,13 @@ def chat():
         print(f"Gemini API Error: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
-if __name__ == '__main__':
-    # Initialize DB creates tables if they don't exist
-    try:
-        init_db()
-    except Exception as e:
-        print(f"Database initialization error: {e}")
+# Initialize DB on startup (ensures tables exist when running with Gunicorn)
+try:
+    init_db()
+except Exception as e:
+    print(f"Database initialization error: {e}")
 
+if __name__ == '__main__':
     port = int(os.getenv('PORT', 8080))
     debug = os.getenv('FLASK_ENV', 'development') == 'development'
     

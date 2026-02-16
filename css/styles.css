@@ -23,17 +23,20 @@
   --text-tertiary: rgba(255, 255, 255, 0.5);
   --text-muted: rgba(255, 255, 255, 0.3);
 
-  /* Brand Gradients (Apple Style - Muted for Premium Feel) */
-  --grad-income: linear-gradient(135deg, #1d4d2d 0%, #153821 100%);
-  --grad-expense: linear-gradient(135deg, #4d1d1d 0%, #381515 100%);
-  --grad-investment: linear-gradient(135deg, #1d2d4d 0%, #152138 100%);
+  /* Brand Gradients - Premium & Subtle */
+  --grad-income: linear-gradient(135deg, rgba(50, 215, 75, 0.2) 0%, rgba(50, 215, 75, 0.1) 100%);
+  --grad-expense: linear-gradient(135deg, rgba(255, 69, 58, 0.2) 0%, rgba(255, 69, 58, 0.1) 100%);
+  --grad-investment: linear-gradient(135deg, rgba(41, 151, 255, 0.2) 0%, rgba(41, 151, 255, 0.1) 100%);
   --grad-pill: linear-gradient(90deg, #ff375f 0%, #bf5af2 100%);
   --brand-gradient: var(--grad-pill);
 
-  /* Accent Colors */
-  --accent-blue: #0a84ff;
-  --accent-green: #30d158;
+  /* Accent Colors - Refined for Dark Mode Aesthetics */
+  --accent-blue: #2997ff;
+  /* Lighter, more vibrant blue */
+  --accent-green: #32d74b;
+  /* Vibrant, cleaner green */
   --accent-red: #ff453a;
+  /* Slightly softer red (SF symbols style) */
   --accent-purple: #bf5af2;
   --accent-pink: #ff375f;
 
@@ -245,7 +248,10 @@ body {
    Header
    ============================================ */
 .header {
-  padding: var(--space-8) var(--space-6) var(--space-4);
+  padding-top: max(var(--space-8), calc(env(safe-area-inset-top) + var(--space-2)));
+  padding-right: var(--space-6);
+  padding-bottom: var(--space-4);
+  padding-left: var(--space-6);
   background: transparent;
 }
 
@@ -279,7 +285,8 @@ body {
   height: 56px;
   border-radius: 50%;
   overflow: hidden;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  box-shadow: none;
+  border: none !important;
   background: var(--bg-tertiary);
   position: relative;
 }
@@ -420,14 +427,17 @@ body {
 
 .summary-card.income {
   background: var(--grad-income);
+  border: 1px solid rgba(50, 215, 75, 0.3);
 }
 
 .summary-card.expense {
   background: var(--grad-expense);
+  border: 1px solid rgba(255, 69, 58, 0.3);
 }
 
 .summary-card.investment {
   background: var(--grad-investment);
+  border: 1px solid rgba(41, 151, 255, 0.3);
 }
 
 .summary-label {
@@ -668,6 +678,28 @@ body {
   transform: translateY(100%);
   transition: transform var(--transition-base);
   overflow-y: auto;
+  overflow-x: hidden;
+  /* Fix for horizontal scroll */
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-handle-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding-bottom: var(--space-4);
+  cursor: grab;
+  touch-action: none;
+  /* Prevent default scroll when touching handle */
+}
+
+.modal-handle {
+  width: 36px;
+  height: 5px;
+  background-color: var(--text-tertiary);
+  border-radius: 100px;
+  opacity: 0.4;
 }
 
 .modal-overlay.active .modal {
@@ -1231,7 +1263,8 @@ body {
   width: 64px;
   height: 64px;
   border-radius: var(--radius-full);
-  background: var(--brand-gradient);
+  background: transparent;
+  /* Changed from brand-gradient to transparent */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1815,4 +1848,70 @@ body {
   padding: var(--space-2) var(--space-4) !important;
   font-size: var(--font-size-sm) !important;
   min-height: unset !important;
+}
+
+/* ============================================
+   Chatbot Enhancements
+   ============================================ */
+.chat-header {
+  display: flex !important;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.danger-icon {
+  color: var(--accent-red);
+  opacity: 0.8;
+  transition: opacity var(--transition-fast), transform var(--transition-fast);
+}
+
+.danger-icon:hover {
+  opacity: 1;
+  transform: scale(1.1);
+  background: rgba(255, 69, 58, 0.1);
+}
+
+.chat-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding-right: var(--space-2);
+  /* Space for send button */
+}
+
+.chat-action-btn {
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.chat-action-btn:hover {
+  color: var(--accent-blue);
+  background: rgba(10, 132, 255, 0.1);
+}
+
+.chat-action-btn.listening {
+  color: var(--accent-red);
+  animation: pulse-red 1.5s infinite;
+}
+
+@keyframes pulse-red {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 69, 58, 0.4);
+  }
+
+  70% {
+    box-shadow: 0 0 0 10px rgba(255, 69, 58, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 69, 58, 0);
+  }
 }

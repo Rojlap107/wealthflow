@@ -351,34 +351,102 @@ const App = {
      * Setup modal handlers
      */
     setupModal() {
-        const overlay = document.getElementById('modalOverlay');
-        const closeBtn = document.getElementById('modalClose');
-
-        if (overlay) {
+        // Shared Modal Overlay Handler
+        const overlays = document.querySelectorAll('.modal-overlay');
+        overlays.forEach(overlay => {
             overlay.addEventListener('click', (e) => {
                 if (e.target === overlay) {
                     this.closeModal();
-                }
-            });
-        }
-
-        if (closeBtn) {
-            closeBtn.addEventListener('click', () => this.closeModal());
-        }
-
-        // Custom Delete Confirmation Modal Handlers
-        const deleteOverlay = document.getElementById('deleteConfirmOverlay');
-        const deleteCloseBtn = document.getElementById('deleteConfirmClose');
-        const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
-        const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
-
-        if (deleteOverlay) {
-            deleteOverlay.addEventListener('click', (e) => {
-                if (e.target === deleteOverlay) {
                     this.closeDeleteModal();
                 }
             });
-        }
+
+            // Touch / Pull-to-close logic
+            const modal = overlay.querySelector('.modal');
+            const handle = overlay.querySelector('.modal-handle-container');
+
+            if (modal) {
+                let startY = 0;
+                let currentY = 0;
+                let isDragging = false;
+
+                // Only allow dragging from the handle or top area
+                const touchStartHandler = (e) => {
+                    // Only start if at the top of scroll and (touching handle OR top of modal)
+                    if (modal.scrollTop <= 0) {
+                        startY = e.touches[0].clientY;
+                        isDragging = true;
+                        // Don't prevent default here to allow normal scrolling if moving up
+                    }
+                };
+
+                const touchMoveHandler = (e) => {
+                    if (!isDragging) return;
+
+                    currentY = e.touches[0].clientY;
+                    const deltaY = currentY - startY;
+
+                    // Only move if pulling down
+                    if (deltaY > 0) {
+                        // Prevent scrolling logic while dragging down
+                        if (e.cancelable && !modal.scrollTop) e.preventDefault();
+
+                        modal.style.transition = 'none'; // Disable transition for direct follow
+                        modal.style.transform = `translateY(${deltaY}px)`;
+                    }
+                };
+
+                const touchEndHandler = (e) => {
+                    if (!isDragging) return;
+                    isDragging = false;
+
+                    const deltaY = currentY - startY;
+                    modal.style.transition = 'transform 0.3s ease-out'; // Re-enable transition
+
+                    // Threshold to close (e.g., 100px)
+                    if (deltaY > 100) {
+                        // Close specific modal based on overlay ID
+                        if (overlay.id === 'deleteConfirmOverlay') {
+                            this.closeDeleteModal();
+                        } else {
+                            this.closeModal();
+                        }
+                    } else {
+                        // Snap back
+                        modal.style.transform = '';
+                    }
+
+                    // Reset currentY
+                    currentY = 0;
+                };
+
+                // Attach to handle for sure-fire drag
+                if (handle) {
+                    handle.addEventListener('touchstart', touchStartHandler, { passive: true });
+                    handle.addEventListener('touchmove', touchMoveHandler, { passive: false });
+                    handle.addEventListener('touchend', touchEndHandler);
+                }
+
+                // Optional: Attach to modal header area too for easier grabbing
+                const header = modal.querySelector('.modal-header');
+                if (header) {
+                    header.addEventListener('touchstart', touchStartHandler, { passive: true });
+                    header.addEventListener('touchmove', touchMoveHandler, { passive: false });
+                    header.addEventListener('touchend', touchEndHandler);
+                }
+            }
+        });
+
+
+        // Close Buttons
+        document.getElementById('modalClose')?.addEventListener('click', () => this.closeModal());
+        document.getElementById('profileModalClose')?.addEventListener('click', () => this.closeModal());
+        document.getElementById('goalModalClose')?.addEventListener('click', () => this.closeModal());
+
+        // Custom Delete Confirmation Modal Handlers
+        const deleteCloseBtn = document.getElementById('deleteConfirmClose');
+        const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+        const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
 
         if (deleteCloseBtn) deleteCloseBtn.addEventListener('click', () => this.closeDeleteModal());
         if (cancelDeleteBtn) cancelDeleteBtn.addEventListener('click', () => this.closeDeleteModal());
@@ -757,7 +825,15 @@ const App = {
      * Update global header with profile information
      */
     async updateGlobalHeader() {
-        const profile = await Profile.get();
+        // Retry a few times if profile is not immediately available on refresh
+        let profile = await Profile.get();
+        let retries = 3;
+        while (!profile && retries > 0) {
+            await new Promise(r => setTimeout(r, 200));
+            profile = await Profile.get();
+            retries--;
+        }
+
         if (!profile) return;
 
         const headerName = document.getElementById('headerUserName');
@@ -772,7 +848,10 @@ const App = {
                 const initials = profile.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
                 headerAvatar.innerHTML = `<span style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: var(--bg-tertiary); color: var(--text-primary); font-weight: 600;">${initials}</span>`;
             } else {
-                headerAvatar.innerHTML = `<img src="${profile.profilePicture}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; display: block;">`;
+                // Use onerror to handle broken links fallback
+                headerAvatar.innerHTML = `<img src="${profile.profilePicture}" alt="Profile" 
+                    style="width: 100%; height: 100%; object-fit: cover; display: block;"
+                    onerror="this.onerror=null; this.src='assets/icons/default-avatar.png'; this.parentNode.innerHTML='<span style=\\'width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: var(--bg-tertiary); color: var(--text-primary); font-weight: 600;\\'>${profile.name[0]}</span>'">`;
             }
             // Ensure no background image interferes
             headerAvatar.style.backgroundImage = 'none';
@@ -1078,10 +1157,10 @@ const App = {
                 this.showDeleteConfirmation('Are you sure you want to clear ALL your data? This cannot be undone.', async () => {
                     await Storage.remove(Storage.KEYS.ENTRIES);
                     await Storage.remove(Storage.KEYS.FIXED_TEMPLATES);
-                    await Storage.remove(Storage.KEYS.PROFILE);
+                    // Profile is preserved: await Storage.remove(Storage.KEYS.PROFILE);
                     await Storage.remove(Storage.KEYS.GOALS);
                     await Storage.remove(Storage.KEYS.CATEGORIES);
-                    await Storage.remove(Storage.KEYS.CHAT_HISTORY); // Ensure chat is also cleared
+                    // Chat history is preserved: await Storage.remove(Storage.KEYS.CHAT_HISTORY);
                     location.reload();
                 });
             });

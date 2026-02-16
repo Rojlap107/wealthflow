@@ -65,6 +65,8 @@ Try asking me things like:
     setupEventListeners() {
         const input = document.getElementById('chatInput');
         const sendBtn = document.getElementById('chatSendBtn');
+        const clearBtn = document.getElementById('clearChatBtn');
+        const voiceBtn = document.getElementById('voiceInputBtn');
 
         if (input) {
             input.addEventListener('keypress', (e) => {
@@ -79,9 +81,78 @@ Try asking me things like:
             sendBtn.addEventListener('click', () => this.sendMessage());
         }
 
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => {
+                if (confirm('Are you sure you want to clear your chat history?')) {
+                    this.clearHistory();
+                }
+            });
+        }
+
+        if (voiceBtn) {
+            this.setupVoiceInput(voiceBtn, input);
+        }
+
         // Close context menu when clicking elsewhere
         document.addEventListener('click', () => this.hideContextMenu());
         document.addEventListener('scroll', () => this.hideContextMenu(), true);
+    },
+
+    /**
+     * Setup Voice-to-Text (Web Speech API)
+     */
+    setupVoiceInput(btn, input) {
+        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+            btn.style.display = 'none'; // Hide if not supported
+            return;
+        }
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'en-US';
+
+        let isListening = false;
+
+        btn.addEventListener('click', () => {
+            if (isListening) {
+                recognition.stop();
+            } else {
+                recognition.start();
+            }
+        });
+
+        recognition.onstart = () => {
+            isListening = true;
+            btn.classList.add('listening');
+            input.placeholder = 'Listening...';
+        };
+
+        recognition.onend = () => {
+            isListening = false;
+            btn.classList.remove('listening');
+            input.placeholder = 'Ask about your finances...';
+        };
+
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            input.value = transcript;
+            // Optional: Auto-send
+            // this.sendMessage(); 
+            input.focus();
+        };
+
+        recognition.onerror = (event) => {
+            console.error('Speech recognition error', event.error);
+            isListening = false;
+            btn.classList.remove('listening');
+            input.placeholder = 'Error using voice input';
+            setTimeout(() => {
+                input.placeholder = 'Ask about your finances...';
+            }, 2000);
+        };
     },
 
     /**
